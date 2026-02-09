@@ -1,0 +1,49 @@
+services:
+  mysql8:
+    image: mysql:8.4
+    restart: always
+    privileged: true
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+#    volumes:
+      #      设置初始化脚本
+#      - ./script/mysql/:/docker-entrypoint-initdb.d/
+      # 挂载数据目录
+#      - ./mysql/data:/var/lib/mysql
+      # 挂载配置文件目录
+#      - ./mysql/config:/etc/mysql/conf.d
+    ports:
+      #      注意这里我映射为了 13316 端口
+      - "13316:3306"
+
+  redis:
+    image: 'bitnami/redis:latest'
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - '6379:6379'
+
+  zookeeper_test:
+    image: zookeeper
+    container_name: zookeeper_test
+    ports:
+      - 2181:2181  # 修改外部端口，避免与其他服务冲突
+    restart: always
+
+  kafka_test:
+    image: wurstmeister/kafka
+    container_name: kafka_test
+    ports:
+      - "9092:9092"  # 外部端口映射
+    environment:
+      KAFKA_BROKER_ID: 0
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper_test:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092  # 容器内部监听端口
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.10.193:9092  # 外部访问的地址
+    volumes:
+#      - /data/docker-compose/kafka/broker1/logs:/var/lib/kafka/logs
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/localtime:/etc/localtime
+    restart: always
