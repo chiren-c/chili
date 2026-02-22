@@ -17,7 +17,7 @@ services:
       - "13316:3306"
 
   redis:
-    image: 'bitnami/redis:8.4.1'
+    image: 'bitnami/redis'
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
     ports:
