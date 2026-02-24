@@ -30,14 +30,14 @@ func (c *UserHandler) RegisterRoutes(server *gin.Engine) {
 	ug.POST("/login", c.LoginJWT)
 }
 
-// SignUp 用户注册接口
+// SignUp 用户注册
 func (c *UserHandler) SignUp(ctx *gin.Context) {
-	type SignUpReq struct {
+	type signUpReq struct {
 		Email           string `json:"email"`
 		Password        string `json:"password"`
 		ConfirmPassword string `json:"confirm_password"`
 	}
-	var req SignUpReq
+	var req signUpReq
 	if err := ctx.Bind(&req); err != nil {
 		c.log.Error("解析请求失败：", loggerx.Error(err))
 		return
@@ -80,7 +80,31 @@ func (c *UserHandler) SignUp(ctx *gin.Context) {
 	}
 	ctx.JSON(http.StatusOK, ginx.Result{Msg: "OK"})
 }
-func (c *UserHandler) LoginJWT(ctx *gin.Context) {}
+
+// LoginJWT 用户登录
+func (c *UserHandler) LoginJWT(ctx *gin.Context) {
+	type loginReq struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+	var req loginReq
+	if err := ctx.Bind(&req); err != nil {
+		c.log.Error("解析请求失败：", loggerx.Error(err))
+		return
+	}
+	u, err := c.svc.Login(ctx, req.Email, req.Password)
+	if err != nil {
+		c.log.Error("解析请求失败：", loggerx.Error(err))
+		ctx.JSON(http.StatusOK, ginx.Result{Code: errs.UserInternalServerError, Msg: "系统错误"})
+		return
+	}
+	c.SetLoginToken(ctx, u)
+	ctx.JSON(http.StatusOK, ginx.Result{Msg: "OK"})
+}
+
+func (c *UserHandler) SetLoginToken(ctx *gin.Context, u domain.User) {
+
+}
 
 func NewUserHandler(log loggerx.Logger, svc service.UserService) *UserHandler {
 	return &UserHandler{
