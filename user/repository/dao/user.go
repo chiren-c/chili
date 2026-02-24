@@ -53,9 +53,9 @@ func (dao *GORMUserDAO) FindByPhone(ctx context.Context, phone string) (User, er
 	return u, err
 }
 
-func NewGORMUserDAO(db gorm.DB) UserDAO {
+func NewGORMUserDAO(db *gorm.DB) UserDAO {
 	return &GORMUserDAO{
-		db: &db,
+		db: db,
 	}
 }
 

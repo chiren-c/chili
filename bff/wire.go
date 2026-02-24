@@ -11,13 +11,15 @@ import (
 var thirdProvider = wire.NewSet(
 	ioc.InitLogger,
 	ioc.InitDB,
-	ioc.InitKafka,
-	ioc.InitRedis,
+	//ioc.InitKafka,
+	//ioc.InitRedis,
 )
 
 func InitApp() *bootstrap.App {
 	wire.Build(
-		//thirdProvider,
+		thirdProvider,
+		ioc.UserProvider,
+
 		ioc.InitGinServer,
 		wire.Struct(new(bootstrap.App), "WebServer"),
 	)

@@ -79,9 +79,8 @@ func (repo *userRepository) entityToDomain(ue dao.User) domain.User {
 		Ctime:    time.UnixMilli(ue.Ctime),
 	}
 }
-func NewCacheUserRepository(dao dao.UserDAO, cache cache.UserCache) UserRepository {
+func NewCacheUserRepository(dao dao.UserDAO) UserRepository {
 	return &userRepository{
-		dao:   dao,
-		cache: cache,
+		dao: dao,
 	}
 }

@@ -9,7 +9,7 @@ type Server struct {
 	Addr string
 }
 
-func (s *Server) start() error {
+func (s *Server) Start() error {
 	return s.Engine.Run(s.Addr)
 }
 
