@@ -8,6 +8,8 @@ const (
 	UserInvalidOrPassword = 401002
 	// UserDuplicateEmail 邮箱冲突
 	UserDuplicateEmail = 401003
+	// UserUnauthorized 未登陆
+	UserUnauthorized = 401004
 	// UserInternalServerError 这是一个非常函数的错误码。代表用户模块系统内部错误
 	UserInternalServerError = 501001
 )
