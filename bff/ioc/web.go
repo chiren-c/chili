@@ -5,18 +5,23 @@ import (
 	"github.com/chiren-c/chili/bff/web/middleware"
 	"github.com/chiren-c/chili/bff/web/user"
 	"github.com/chiren-c/chili/pkg/ginx"
+	"github.com/chiren-c/chili/pkg/loggerx"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	"github.com/spf13/viper"
 	"strings"
 	"time"
 )
 
-func InitGinServer(user *user.UserHandler, jwtHdl ijwt.Handler) *ginx.Server {
+func InitGinServer(user *user.UserHandler, jwtHdl ijwt.Handler,
+	log loggerx.Logger, cmd redis.Cmdable) *ginx.Server {
 	engine := gin.Default()
 	engine.Use(
 		corsHdl(),
-		middleware.NewJWTLoginMiddlewareBuilder(jwtHdl).Build())
+		middleware.NewJWTLoginMiddlewareBuilder(jwtHdl).Build(),
+		middleware.NewIpRateLimitMiddleware(cmd, log).Build(),
+	)
 	user.RegisterRoutes(engine)
 	addr := viper.GetString("http.addr")
 	return &ginx.Server{

@@ -8,6 +8,7 @@ package main
 
 import (
 	"github.com/chiren-c/chili/bff/ioc"
+	"github.com/chiren-c/chili/bff/web/jwt"
 	"github.com/chiren-c/chili/bff/web/user"
 	"github.com/chiren-c/chili/pkg/bootstrap"
 	"github.com/chiren-c/chili/user/repository"
@@ -24,8 +25,10 @@ func InitApp() *bootstrap.App {
 	userDAO := dao.NewGORMUserDAO(db)
 	userRepository := repository.NewCacheUserRepository(userDAO)
 	userService := service.NewUserService(userRepository)
-	userHandler := user.NewUserHandler(logger, userService)
-	server := ioc.InitGinServer(userHandler)
+	cmdable := ioc.InitRedis()
+	handler := jwt.NewRedisJWTHandler(cmdable)
+	userHandler := user.NewUserHandler(logger, userService, handler)
+	server := ioc.InitGinServer(userHandler, handler, logger, cmdable)
 	app := &bootstrap.App{
 		WebServer: server,
 	}
@@ -34,4 +37,4 @@ func InitApp() *bootstrap.App {
 
 // wire.go:
 
-var thirdProvider = wire.NewSet(ioc.InitLogger, ioc.InitDB)
+var thirdProvider = wire.NewSet(ioc.InitLogger, ioc.InitDB, ioc.InitRedis)
