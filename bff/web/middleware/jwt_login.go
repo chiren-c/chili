@@ -17,9 +17,9 @@ type JWTLoginMiddlewareBuilder struct {
 
 func NewJWTLoginMiddlewareBuilder(hdl jwt3.Handler) *JWTLoginMiddlewareBuilder {
 	s := set.NewMapSet[string](3)
-	s.Add("/users/signup")
-	s.Add("/users/refresh_token")
-	s.Add("/users/login")
+	s.Add("/user/signup")
+	s.Add("/user/refresh_token")
+	s.Add("/user/login")
 	return &JWTLoginMiddlewareBuilder{
 		publicPaths: s,
 		Handler:     hdl,
