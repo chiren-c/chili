@@ -10,3 +10,6 @@ http:
 kafka:
   addr:
     - "localhost:9092"
+tencentSms:
+  secretId: ""
+  secretKey: ""

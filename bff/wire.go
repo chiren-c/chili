@@ -21,6 +21,7 @@ func InitApp() *bootstrap.App {
 		thirdProvider,
 		jwt.NewRedisJWTHandler,
 		ioc.UserProvider,
+		ioc.SmsProvider,
 		ioc.InitGinServer,
 		wire.Struct(new(bootstrap.App), "WebServer"),
 	)

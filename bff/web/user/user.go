@@ -31,6 +31,7 @@ func (c *UserHandler) RegisterRoutes(server *gin.Engine) {
 	ug := server.Group("/user")
 	ug.POST("/signup", c.SignUp)
 	ug.POST("/login", c.LoginJWT)
+	ug.POST("/login_sms", c.LoginSMS)
 	ug.POST("/refresh_token", c.RefreshToken)
 }
 
@@ -134,6 +135,16 @@ func (c *UserHandler) RefreshToken(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, ginx.Result{Msg: "刷新成功"})
+}
+func (c *UserHandler) LoginSMS(ctx *gin.Context) {
+	type Req struct {
+		Phone string `json:"phone"`
+		Code  string `json:"code"`
+	}
+	var req Req
+	if err := ctx.Bind(&req); err != nil {
+		return
+	}
 }
 
 func NewUserHandler(log loggerx.Logger, svc service.UserService,
