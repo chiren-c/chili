@@ -24,8 +24,8 @@ type userRepository struct {
 }
 
 func (repo *userRepository) FindByPhone(ctx context.Context, phone string) (domain.User, error) {
-	//TODO implement me
-	panic("implement me")
+	u, err := repo.dao.FindByPhone(ctx, phone)
+	return repo.entityToDomain(u), err
 }
 func (repo *userRepository) FindByEmail(ctx context.Context, email string) (domain.User, error) {
 	u, err := repo.dao.FindByEmail(ctx, email)

@@ -15,6 +15,7 @@ var ErrInvalidUserOrPassword = errors.New("邮箱或者密码不正确")
 type UserService interface {
 	Login(ctx context.Context, email, password string) (domain.User, error)
 	Signup(ctx context.Context, u domain.User) error
+	FindOrCreate(ctx context.Context, phone string) (domain.User, error)
 }
 
 type userService struct {
@@ -41,6 +42,22 @@ func (svc *userService) Signup(ctx context.Context, u domain.User) error {
 	}
 	u.Password = string(hash)
 	return svc.repo.Create(ctx, u)
+}
+
+func (svc *userService) FindOrCreate(ctx context.Context, phone string) (domain.User, error) {
+	u, err := svc.repo.FindByPhone(ctx, phone)
+	if err != repository.ErrUserNotFound {
+		return u, err
+	}
+	// 执行注册
+	err = svc.repo.Create(ctx, domain.User{
+		Phone: phone,
+	})
+	// 注册失败，但又不是用户手机号码冲突，说明是系统错误
+	if err != nil && err != repository.ErrUserDuplicate {
+		return domain.User{}, err
+	}
+	return svc.repo.FindByPhone(ctx, phone)
 }
 
 func NewUserService(repo repository.UserRepository) UserService {

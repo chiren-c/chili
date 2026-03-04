@@ -2,6 +2,7 @@ package user
 
 import (
 	jwt3 "github.com/chiren-c/chili/bff/web/jwt"
+	codeService "github.com/chiren-c/chili/code/service"
 	"github.com/chiren-c/chili/pkg/ginx"
 	"github.com/chiren-c/chili/pkg/loggerx"
 	"github.com/chiren-c/chili/user/domain"
@@ -10,19 +11,24 @@ import (
 	regexp "github.com/dlclark/regexp2"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"net/http"
 )
 
 const (
 	emailRegexPattern    = `^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$`
 	passwordRegexPattern = `^(?=.*[A-Za-z])(?=.*\d)(?=.*[$@$!%*#?&])[A-Za-z\d$@$!%*#?&]{8,}$`
+	phoneRegexPattern    = `/^1[3-9]\d{9}$/`
+	bizLogin             = "login"
 )
 
 type UserHandler struct {
 	svc              service.UserService
+	codeSvc          codeService.CodeService
 	log              loggerx.Logger
 	emailRegexExp    *regexp.Regexp
 	passwordRegexExp *regexp.Regexp
+	phoneRegexExp    *regexp.Regexp
 	jwt3.Handler
 }
 
@@ -31,6 +37,7 @@ func (c *UserHandler) RegisterRoutes(server *gin.Engine) {
 	ug := server.Group("/user")
 	ug.POST("/signup", c.SignUp)
 	ug.POST("/login", c.LoginJWT)
+	ug.POST("/login_sms/code/send", c.SendSMSLoginCode)
 	ug.POST("/login_sms", c.LoginSMS)
 	ug.POST("/refresh_token", c.RefreshToken)
 }
@@ -83,7 +90,7 @@ func (c *UserHandler) SignUp(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, ginx.Result{Code: errs.UserInternalServerError, Msg: "系统错误"})
 		return
 	}
-	ctx.JSON(http.StatusOK, ginx.Result{Msg: "OK"})
+	ctx.JSON(http.StatusOK, ginx.Result{Msg: "注册成功"})
 }
 
 // LoginJWT 用户登录
@@ -109,9 +116,10 @@ func (c *UserHandler) LoginJWT(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, ginx.Result{Code: errs.UserInternalServerError, Msg: "系统错误"})
 		return
 	}
-	ctx.JSON(http.StatusOK, ginx.Result{Msg: "OK"})
+	ctx.JSON(http.StatusOK, ginx.Result{Msg: "登录成功"})
 }
 
+// RefreshToken 刷新 token
 func (c *UserHandler) RefreshToken(ctx *gin.Context) {
 	tokenStr := c.ExtractTokenString(ctx)
 	var rc jwt3.RefreshClaims
@@ -136,6 +144,36 @@ func (c *UserHandler) RefreshToken(ctx *gin.Context) {
 	}
 	ctx.JSON(http.StatusOK, ginx.Result{Msg: "刷新成功"})
 }
+
+// SendSMSLoginCode 发送 sms 登陆 code
+func (c *UserHandler) SendSMSLoginCode(ctx *gin.Context) {
+	type Req struct {
+		Phone string `json:"phone"`
+	}
+	var req Req
+	if err := ctx.Bind(&req); err != nil {
+		return
+	}
+	if req.Phone == "" {
+		ctx.JSON(http.StatusOK, ginx.Result{Code: errs.UserInvalidInput, Msg: "请输入手机号码"})
+	}
+	ok, err := c.phoneRegexExp.MatchString(req.Phone)
+	if err != nil {
+		ctx.JSON(http.StatusOK, ginx.Result{Code: errs.UserInternalServerError, Msg: "系统错误"})
+		return
+	}
+	if !ok {
+		ctx.JSON(http.StatusOK, ginx.Result{Code: errs.UserInvalidInput, Msg: "输入的手机号码有误"})
+	}
+	err = c.codeSvc.Send(ctx, bizLogin, req.Phone)
+	if err != nil {
+		ctx.JSON(http.StatusOK, ginx.Result{Code: errs.UserInternalServerError, Msg: "系统错误"})
+		return
+	}
+	ctx.JSON(http.StatusOK, ginx.Result{Msg: "发送成功"})
+}
+
+// LoginSMS 登陆
 func (c *UserHandler) LoginSMS(ctx *gin.Context) {
 	type Req struct {
 		Phone string `json:"phone"`
@@ -145,12 +183,35 @@ func (c *UserHandler) LoginSMS(ctx *gin.Context) {
 	if err := ctx.Bind(&req); err != nil {
 		return
 	}
+	ok, err := c.codeSvc.Verify(ctx, bizLogin, req.Phone, req.Code)
+	if err != nil {
+		ctx.JSON(http.StatusOK, ginx.Result{Code: errs.UserInternalServerError, Msg: "系统错误"})
+		c.log.Error("用户手机号码登录失败", loggerx.Error(err))
+		return
+	}
+	if !ok {
+		ctx.JSON(http.StatusOK, ginx.Result{Code: errs.UserInvalidInput, Msg: "验证码错误"})
+		return
+	}
+	u, err := c.svc.FindOrCreate(ctx, req.Phone)
+	if err != nil {
+		ctx.JSON(http.StatusOK, ginx.Result{Code: errs.UserInternalServerError, Msg: "系统错误"})
+		return
+	}
+	ssid := uuid.New().String()
+	err = c.SetJWTToken(ctx, ssid, u.Id)
+	if err != nil {
+		ctx.JSON(http.StatusOK, ginx.Result{Code: errs.UserInternalServerError, Msg: "系统错误"})
+		return
+	}
+	ctx.JSON(http.StatusOK, ginx.Result{Msg: "登录成功"})
 }
 
 func NewUserHandler(log loggerx.Logger, svc service.UserService,
-	jwt jwt3.Handler) *UserHandler {
+	jwt jwt3.Handler, codeSvc codeService.CodeService) *UserHandler {
 	return &UserHandler{
 		svc:              svc,
+		codeSvc:          codeSvc,
 		log:              log,
 		emailRegexExp:    regexp.MustCompile(emailRegexPattern, regexp.None),
 		passwordRegexExp: regexp.MustCompile(passwordRegexPattern, regexp.None),
