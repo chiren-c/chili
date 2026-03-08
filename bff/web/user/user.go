@@ -52,6 +52,7 @@ func (c *UserHandler) SignUp(ctx *gin.Context) {
 	var req signUpReq
 	if err := ctx.Bind(&req); err != nil {
 		c.log.Error("解析请求失败：", loggerx.Error(err))
+		ctx.JSON(http.StatusOK, ginx.Result{Code: errs.UserInternalServerError, Msg: "系统错误"})
 		return
 	}
 	ok, err := c.emailRegexExp.MatchString(req.Email)

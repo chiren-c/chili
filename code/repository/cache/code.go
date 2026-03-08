@@ -3,8 +3,8 @@ package cache
 import (
 	"context"
 	_ "embed"
+	"errors"
 	"fmt"
-	"github.com/pkg/errors"
 	"github.com/redis/go-redis/v9"
 )
 

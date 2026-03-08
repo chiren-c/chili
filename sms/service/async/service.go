@@ -16,11 +16,15 @@ type Service struct {
 }
 
 func NewService(svc service.Service, repo repository.AsyncSmsRepository, log loggerx.Logger) *Service {
-	return &Service{
+	res := &Service{
 		svc:  svc,
 		repo: repo,
 		log:  log,
 	}
+	go func() {
+		res.StartAsyncCycle()
+	}()
+	return res
 }
 
 // StartAsyncCycle 异步发送消息

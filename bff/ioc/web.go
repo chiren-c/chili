@@ -1,6 +1,7 @@
 package ioc
 
 import (
+	"github.com/chiren-c/chili/bff/web/article"
 	ijwt "github.com/chiren-c/chili/bff/web/jwt"
 	"github.com/chiren-c/chili/bff/web/middleware"
 	"github.com/chiren-c/chili/bff/web/user"
@@ -14,8 +15,11 @@ import (
 	"time"
 )
 
-func InitGinServer(user *user.UserHandler, jwtHdl ijwt.Handler,
-	log loggerx.Logger, cmd redis.Cmdable) *ginx.Server {
+func InitGinServer(user *user.UserHandler,
+	article *article.ArticleHandler,
+	jwtHdl ijwt.Handler,
+	log loggerx.Logger,
+	cmd redis.Cmdable) *ginx.Server {
 	engine := gin.Default()
 	engine.Use(
 		corsHdl(),
@@ -23,6 +27,7 @@ func InitGinServer(user *user.UserHandler, jwtHdl ijwt.Handler,
 		middleware.NewIpRateLimitMiddleware(cmd, log).Build(),
 	)
 	user.RegisterRoutes(engine)
+	article.RegisterRoutes(engine)
 	addr := viper.GetString("http.addr")
 	return &ginx.Server{
 		Engine: engine,

@@ -10,6 +10,9 @@ import (
 	"github.com/chiren-c/chili/bff/ioc"
 	"github.com/chiren-c/chili/bff/web/jwt"
 	"github.com/chiren-c/chili/bff/web/user"
+	repository2 "github.com/chiren-c/chili/code/repository"
+	"github.com/chiren-c/chili/code/repository/cache"
+	service2 "github.com/chiren-c/chili/code/service"
 	"github.com/chiren-c/chili/pkg/bootstrap"
 	"github.com/chiren-c/chili/user/repository"
 	"github.com/chiren-c/chili/user/repository/dao"
@@ -27,7 +30,11 @@ func InitApp() *bootstrap.App {
 	userService := service.NewUserService(userRepository)
 	cmdable := ioc.InitRedis()
 	handler := jwt.NewRedisJWTHandler(cmdable)
-	userHandler := user.NewUserHandler(logger, userService, handler)
+	serviceService := ioc.InitSmsTencentService()
+	codeCache := cache.NewRedisCodeCache(cmdable)
+	codeRepository := repository2.NewCachedCodeRepository(codeCache)
+	codeService := service2.NewSMSCodeService(serviceService, codeRepository)
+	userHandler := user.NewUserHandler(logger, userService, handler, codeService)
 	server := ioc.InitGinServer(userHandler, handler, logger, cmdable)
 	app := &bootstrap.App{
 		WebServer: server,
