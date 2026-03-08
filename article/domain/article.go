@@ -2,19 +2,8 @@ package domain
 
 import "time"
 
-type Article struct {
-	Id      int64
-	Title   string
-	Status  ArticleStatus
-	Content string
-	// 作者
-	Author Author
-	Ctime  time.Time
-	Utime  time.Time
-}
-
 // Abstract 取部分作为摘要
-func (a Article) Abstract() string {
+func (a ArticleAuthor) Abstract() string {
 	cs := []rune(a.Content)
 	if len(cs) < 100 {
 		return a.Content
@@ -22,7 +11,19 @@ func (a Article) Abstract() string {
 	return string(cs[:100])
 }
 
-func (a Article) Published() bool {
+func (a ArticleReader) Abstract() string {
+	cs := []rune(a.Content)
+	if len(cs) < 100 {
+		return a.Content
+	}
+	return string(cs[:100])
+}
+
+func (a ArticleAuthor) Published() bool {
+	return a.Status == ArticleStatusPublished
+}
+
+func (a ArticleReader) Published() bool {
 	return a.Status == ArticleStatusPublished
 }
 

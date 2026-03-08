@@ -80,7 +80,48 @@ func (a *ArticleHandler) save(ctx *gin.Context) {
 }
 
 func (a *ArticleHandler) detail(ctx *gin.Context) {
-
+	var usr ginx.UserClaims
+	user, ok := ctx.Get("user")
+	if !ok {
+		a.log.Error("无法获得 claims：", loggerx.String("path", ctx.Request.URL.Path))
+		ctx.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+	usr, ok = user.(ginx.UserClaims)
+	if !ok {
+		a.log.Error("无法获得 claims：", loggerx.String("path", ctx.Request.URL.Path))
+		ctx.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+	type detailReq struct {
+		Id int64 `json:"id"`
+	}
+	var req detailReq
+	if err := ctx.Bind(&req); err != nil {
+		a.log.Error("解析请求失败：", loggerx.Error(err))
+		ctx.JSON(http.StatusOK, ginx.Result{Code: errs.ArticleInternalServerError, Msg: "系统错误"})
+		return
+	}
+	art, err := a.svc.GetById(ctx, req.Id)
+	if err != nil {
+		a.log.Error("获得文章信息失败：", loggerx.Error(err))
+		ctx.JSON(http.StatusOK, ginx.Result{Code: errs.ArticleInternalServerError, Msg: "系统错误"})
+		return
+	}
+	if art.Author.Id != usr.Id {
+		a.log.Error("非法访问文章，创作者 ID 不匹配：", loggerx.Int64("uid", usr.Id))
+		ctx.JSON(http.StatusOK, ginx.Result{Code: errs.ArticleInvalidInput, Msg: "获得文章信息失败"})
+		return
+	}
+	ctx.JSON(http.StatusOK, ginx.Result{Data: ArticleAuthorVo{
+		Id:         art.Id,
+		Title:      art.Title,
+		Content:    art.Content,
+		Status:     art.Status.ToUint8(),
+		StatusText: art.Status.ToString(),
+		Ctime:      art.Ctime.Format(time.DateTime),
+		Utime:      art.Utime.Format(time.DateTime),
+	}})
 }
 
 func (a *ArticleHandler) publish(ctx *gin.Context) {

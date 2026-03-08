@@ -10,8 +10,8 @@ import (
 type ArticleService interface {
 	List(ctx context.Context, author int64, limit, offset int) ([]domain.ArticleAuthor, error)
 	Save(ctx context.Context, art domain.ArticleAuthor) (int64, error)
-	GetById(ctx context.Context, id int64) (domain.Article, error)
-	Publish(ctx context.Context, art domain.Article) (int64, error)
+	GetById(ctx context.Context, id int64) (domain.ArticleAuthor, error)
+	Publish(ctx context.Context, art domain.ArticleAuthor) (int64, error)
 }
 
 type articleService struct {
@@ -28,12 +28,12 @@ func (a *articleService) Save(ctx context.Context, art domain.ArticleAuthor) (in
 	panic("implement me")
 }
 
-func (a *articleService) GetById(ctx context.Context, id int64) (domain.Article, error) {
+func (a *articleService) GetById(ctx context.Context, id int64) (domain.ArticleAuthor, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (a *articleService) Publish(ctx context.Context, art domain.Article) (int64, error) {
+func (a *articleService) Publish(ctx context.Context, art domain.ArticleAuthor) (int64, error) {
 	//TODO implement me
 	panic("implement me")
 }

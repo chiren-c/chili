@@ -15,7 +15,7 @@ type ArticleAuthorRepository interface {
 	Create(ctx context.Context, art domain.ArticleAuthor) (int64, error)
 	Update(ctx context.Context, art domain.ArticleAuthor) error
 	GetById(ctx context.Context, id int64) (domain.ArticleAuthor, error)
-	Publish(ctx context.Context, art domain.Article) (int64, error)
+	Publish(ctx context.Context, art domain.ArticleAuthor) (int64, error)
 }
 
 type articleAuthorRepository struct {
@@ -52,7 +52,7 @@ func (a *articleAuthorRepository) GetById(ctx context.Context, id int64) (domain
 	panic("implement me")
 }
 
-func (a *articleAuthorRepository) Publish(ctx context.Context, art domain.Article) (int64, error) {
+func (a *articleAuthorRepository) Publish(ctx context.Context, art domain.ArticleAuthor) (int64, error) {
 	//TODO implement me
 	panic("implement me")
 }
