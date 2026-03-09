@@ -6,6 +6,7 @@ import (
 	"gorm.io/driver/mysql"
 	_ "gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
 )
 
 func InitDB() *gorm.DB {
@@ -19,7 +20,12 @@ func InitDB() *gorm.DB {
 	if err != nil {
 		panic(fmt.Errorf("初始化配置失败 %v1, 原因 %w", c, err))
 	}
-	db, err := gorm.Open(mysql.Open(c.DSN), &gorm.Config{})
+	db, err := gorm.Open(mysql.Open(c.DSN), &gorm.Config{
+		// 关闭复数表名
+		NamingStrategy: schema.NamingStrategy{
+			SingularTable: true,
+		},
+	})
 	if err != nil {
 		panic(err)
 	}

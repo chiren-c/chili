@@ -184,7 +184,15 @@ func (c *UserHandler) LoginSMS(ctx *gin.Context) {
 	if err := ctx.Bind(&req); err != nil {
 		return
 	}
-	ok, err := c.codeSvc.Verify(ctx, bizLogin, req.Phone, req.Code)
+	ok, err := c.phoneRegexExp.MatchString(req.Phone)
+	if err != nil {
+		ctx.JSON(http.StatusOK, ginx.Result{Code: errs.UserInternalServerError, Msg: "系统错误"})
+		return
+	}
+	if !ok {
+		ctx.JSON(http.StatusOK, ginx.Result{Code: errs.UserInvalidInput, Msg: "输入的手机号码有误"})
+	}
+	ok, err = c.codeSvc.Verify(ctx, bizLogin, req.Phone, req.Code)
 	if err != nil {
 		ctx.JSON(http.StatusOK, ginx.Result{Code: errs.UserInternalServerError, Msg: "系统错误"})
 		c.log.Error("用户手机号码登录失败", loggerx.Error(err))
@@ -216,6 +224,7 @@ func NewUserHandler(log loggerx.Logger, svc service.UserService,
 		log:              log,
 		emailRegexExp:    regexp.MustCompile(emailRegexPattern, regexp.None),
 		passwordRegexExp: regexp.MustCompile(passwordRegexPattern, regexp.None),
+		phoneRegexExp:    regexp.MustCompile(phoneRegexPattern, regexp.None),
 		Handler:          jwt,
 	}
 }

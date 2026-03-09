@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"time"
 )
 
@@ -66,8 +67,33 @@ func (g *GORMArticleAuthorDAO) GetById(ctx context.Context, id int64) (ArticleAu
 }
 
 func (g *GORMArticleAuthorDAO) Sync(ctx context.Context, art ArticleAuthor) (int64, error) {
-	//TODO implement me
-	panic("implement me")
+	id := art.Id
+	err := g.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var err error
+		now := time.Now().UnixMilli()
+		art.Utime = now
+		txDAO := NewGORMArticleAuthorDAO(tx)
+		if id == 0 {
+			art.Ctime = now
+			id, err = txDAO.Insert(ctx, art)
+		} else {
+			err = txDAO.UpdateById(ctx, art)
+		}
+		if err != nil {
+			return err
+		}
+		art.Id = id
+		publishArt := art
+		return tx.Model(&ArticleReader{}).Clauses(clause.OnConflict{
+			Columns: []clause.Column{{Name: "id"}},
+			DoUpdates: clause.Assignments(map[string]any{
+				"title":   art.Title,
+				"content": art.Content,
+				"utime":   now,
+			}),
+		}).Create(&publishArt).Error
+	})
+	return id, err
 }
 
 func (g *GORMArticleAuthorDAO) SyncStatus(ctx context.Context, author, id int64, status uint8) error {

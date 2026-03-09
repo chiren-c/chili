@@ -15,7 +15,7 @@ type ArticleAuthorRepository interface {
 	Create(ctx context.Context, art domain.ArticleAuthor) (int64, error)
 	Update(ctx context.Context, art domain.ArticleAuthor) error
 	GetById(ctx context.Context, id int64) (domain.ArticleAuthor, error)
-	Publish(ctx context.Context, art domain.ArticleAuthor) (int64, error)
+	Sync(ctx context.Context, art domain.ArticleAuthor) (int64, error)
 }
 
 type articleAuthorRepository struct {
@@ -38,23 +38,23 @@ func (a *articleAuthorRepository) List(ctx context.Context, author int64, limit,
 }
 
 func (a *articleAuthorRepository) Create(ctx context.Context, art domain.ArticleAuthor) (int64, error) {
-	//TODO implement me
-	panic("implement me")
+	return a.dao.Insert(ctx, a.ToEntity(art))
 }
 
 func (a *articleAuthorRepository) Update(ctx context.Context, art domain.ArticleAuthor) error {
-	//TODO implement me
-	panic("implement me")
+	return a.dao.UpdateById(ctx, a.ToEntity(art))
 }
 
 func (a *articleAuthorRepository) GetById(ctx context.Context, id int64) (domain.ArticleAuthor, error) {
-	//TODO implement me
-	panic("implement me")
+	art, err := a.dao.GetById(ctx, id)
+	if err != nil {
+		return domain.ArticleAuthor{}, err
+	}
+	return a.ToDomain(art), nil
 }
 
-func (a *articleAuthorRepository) Publish(ctx context.Context, art domain.ArticleAuthor) (int64, error) {
-	//TODO implement me
-	panic("implement me")
+func (a *articleAuthorRepository) Sync(ctx context.Context, art domain.ArticleAuthor) (int64, error) {
+	return a.dao.Sync(ctx, a.ToEntity(art))
 }
 
 func (a *articleAuthorRepository) ToDomain(dao dao.ArticleAuthor) domain.ArticleAuthor {

@@ -1,5 +1,3 @@
 package dao
 
-type ArticleReader struct {
-	ArticleAuthor
-}
+type ArticleReader ArticleAuthor

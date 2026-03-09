@@ -15,32 +15,33 @@ type ArticleService interface {
 }
 
 type articleService struct {
-	log loggerx.Logger
-	rep repository.ArticleAuthorRepository
+	log        loggerx.Logger
+	authorResp repository.ArticleAuthorRepository
 }
 
 func (a *articleService) List(ctx context.Context, author int64, limit, offset int) ([]domain.ArticleAuthor, error) {
-	return a.rep.List(ctx, author, limit, offset)
+	return a.authorResp.List(ctx, author, limit, offset)
 }
 
 func (a *articleService) Save(ctx context.Context, art domain.ArticleAuthor) (int64, error) {
-	//TODO implement me
-	panic("implement me")
+	art.Status = domain.ArticleStatusUnpublished
+	if art.Id == 0 {
+		return a.authorResp.Create(ctx, art)
+	}
+	return art.Id, a.authorResp.Update(ctx, art)
 }
 
 func (a *articleService) GetById(ctx context.Context, id int64) (domain.ArticleAuthor, error) {
-	//TODO implement me
-	panic("implement me")
+	return a.authorResp.GetById(ctx, id)
 }
 
 func (a *articleService) Publish(ctx context.Context, art domain.ArticleAuthor) (int64, error) {
-	//TODO implement me
-	panic("implement me")
+	return a.authorResp.Sync(ctx, art)
 }
 
-func NewArticleService(log loggerx.Logger, rep repository.ArticleAuthorRepository) ArticleService {
+func NewArticleService(log loggerx.Logger, authorResp repository.ArticleAuthorRepository) ArticleService {
 	return &articleService{
-		log: log,
-		rep: rep,
+		log:        log,
+		authorResp: authorResp,
 	}
 }

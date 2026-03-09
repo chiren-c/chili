@@ -23,6 +23,7 @@ func InitApp() *bootstrap.App {
 		ioc.UserProvider,
 		ioc.SmsProvider,
 		ioc.CodeProvider,
+		ioc.ArticleProvider,
 		ioc.InitGinServer,
 		wire.Struct(new(bootstrap.App), "WebServer"),
 	)

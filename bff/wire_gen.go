@@ -7,7 +7,12 @@
 package main
 
 import (
+	repository3 "github.com/chiren-c/chili/article/repository"
+	cache2 "github.com/chiren-c/chili/article/repository/cache"
+	dao2 "github.com/chiren-c/chili/article/repository/dao"
+	service3 "github.com/chiren-c/chili/article/service"
 	"github.com/chiren-c/chili/bff/ioc"
+	"github.com/chiren-c/chili/bff/web/article"
 	"github.com/chiren-c/chili/bff/web/jwt"
 	"github.com/chiren-c/chili/bff/web/user"
 	repository2 "github.com/chiren-c/chili/code/repository"
@@ -35,7 +40,12 @@ func InitApp() *bootstrap.App {
 	codeRepository := repository2.NewCachedCodeRepository(codeCache)
 	codeService := service2.NewSMSCodeService(serviceService, codeRepository)
 	userHandler := user.NewUserHandler(logger, userService, handler, codeService)
-	server := ioc.InitGinServer(userHandler, handler, logger, cmdable)
+	articleAuthorDAO := dao2.NewGORMArticleAuthorDAO(db)
+	articleAuthorCache := cache2.NewRedisArticleAuthor(cmdable)
+	articleAuthorRepository := repository3.NewArticleAuthorRepository(logger, articleAuthorDAO, articleAuthorCache)
+	articleService := service3.NewArticleService(logger, articleAuthorRepository)
+	articleHandler := article.NewArticleHandler(logger, articleService)
+	server := ioc.InitGinServer(userHandler, articleHandler, handler, logger, cmdable)
 	app := &bootstrap.App{
 		WebServer: server,
 	}

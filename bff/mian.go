@@ -1,6 +1,7 @@
 package main
 
 import (
+	dao2 "github.com/chiren-c/chili/article/repository/dao"
 	"github.com/chiren-c/chili/bff/ioc"
 	"github.com/chiren-c/chili/user/repository/dao"
 	"github.com/spf13/pflag"
@@ -10,6 +11,7 @@ import (
 
 func main() {
 	initViperWatch()
+	_ = InitTables(ioc.InitDB())
 	_ = InitTables(ioc.InitDB())
 	app := InitApp()
 	err := app.WebServer.Start()
@@ -32,5 +34,7 @@ func initViperWatch() {
 func InitTables(db *gorm.DB) error {
 	return db.AutoMigrate(
 		&dao.User{},
+		&dao2.ArticleAuthor{},
+		&dao2.ArticleReader{},
 	)
 }

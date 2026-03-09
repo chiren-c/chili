@@ -76,7 +76,37 @@ func (a *ArticleHandler) list(ctx *gin.Context) {
 }
 
 func (a *ArticleHandler) save(ctx *gin.Context) {
-
+	var usr ginx.UserClaims
+	user, ok := ctx.Get("user")
+	if !ok {
+		a.log.Error("无法获得 claims：", loggerx.String("path", ctx.Request.URL.Path))
+		ctx.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+	usr, ok = user.(ginx.UserClaims)
+	type saveReq struct {
+		Id      int64  `json:"id"`
+		Title   string `json:"title"`
+		Content string `json:"content"`
+	}
+	var req saveReq
+	if err := ctx.Bind(&req); err != nil {
+		a.log.Error("解析请求失败", loggerx.Error(err))
+		ctx.JSON(http.StatusOK, ginx.Result{Code: errs.ArticleInternalServerError, Msg: "系统错误"})
+		return
+	}
+	id, err := a.svc.Save(ctx, domain.ArticleAuthor{
+		Id:      req.Id,
+		Title:   req.Title,
+		Content: req.Content,
+		Author:  domain.Author{Id: usr.Id},
+	})
+	if err != nil {
+		a.log.Error("保存数据失败", loggerx.Error(err))
+		ctx.JSON(http.StatusOK, ginx.Result{Code: errs.ArticleInternalServerError, Msg: "系统错误"})
+		return
+	}
+	ctx.JSON(http.StatusOK, ginx.Result{Data: id})
 }
 
 func (a *ArticleHandler) detail(ctx *gin.Context) {
@@ -125,7 +155,37 @@ func (a *ArticleHandler) detail(ctx *gin.Context) {
 }
 
 func (a *ArticleHandler) publish(ctx *gin.Context) {
-
+	var usr ginx.UserClaims
+	user, ok := ctx.Get("user")
+	if !ok {
+		a.log.Error("无法获得 claims：", loggerx.String("path", ctx.Request.URL.Path))
+		ctx.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+	usr, ok = user.(ginx.UserClaims)
+	type publishReq struct {
+		Id      int64  `json:"id"`
+		Title   string `json:"title"`
+		Content string `json:"content"`
+	}
+	var req publishReq
+	if err := ctx.Bind(&req); err != nil {
+		a.log.Error("解析请求失败", loggerx.Error(err))
+		ctx.JSON(http.StatusOK, ginx.Result{Code: errs.ArticleInternalServerError, Msg: "系统错误"})
+		return
+	}
+	id, err := a.svc.Publish(ctx, domain.ArticleAuthor{
+		Id:      req.Id,
+		Title:   req.Title,
+		Content: req.Content,
+		Author:  domain.Author{Id: usr.Id},
+	})
+	if err != nil {
+		a.log.Error("发表失败", loggerx.Error(err))
+		ctx.JSON(http.StatusOK, ginx.Result{Code: errs.ArticleInternalServerError, Msg: "系统错误"})
+		return
+	}
+	ctx.JSON(http.StatusOK, ginx.Result{Msg: "发表成功", Data: id})
 }
 
 func NewArticleHandler(log loggerx.Logger, svc service.ArticleService) *ArticleHandler {
