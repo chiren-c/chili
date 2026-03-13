@@ -3,6 +3,7 @@ package main
 import (
 	dao2 "github.com/chiren-c/chili/article/repository/dao"
 	"github.com/chiren-c/chili/bff/ioc"
+	dao3 "github.com/chiren-c/chili/cronjob/repository/dao"
 	"github.com/chiren-c/chili/user/repository/dao"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -12,8 +13,16 @@ import (
 func main() {
 	initViperWatch()
 	_ = InitTables(ioc.InitDB())
-	_ = InitTables(ioc.InitDB())
 	app := InitApp()
+	app.Cron.Start()
+	defer func() {
+		// 等待定时任务退出
+		app.Cron.Stop()
+	}()
+
+	//go func() {
+	//	_ = app.Scheduler.Schedule()
+	//}()
 	err := app.WebServer.Start()
 	panic(err)
 }
@@ -36,5 +45,6 @@ func InitTables(db *gorm.DB) error {
 		&dao.User{},
 		&dao2.ArticleAuthor{},
 		&dao2.ArticleReader{},
+		dao3.Job{},
 	)
 }

@@ -24,8 +24,11 @@ func InitApp() *bootstrap.App {
 		ioc.SmsProvider,
 		ioc.CodeProvider,
 		ioc.ArticleProvider,
+		ioc.InitJobProvider,
+		// 调度器调用 job
+		//ioc.InitJobMysqlProvider,
 		ioc.InitGinServer,
-		wire.Struct(new(bootstrap.App), "WebServer"),
+		wire.Struct(new(bootstrap.App), "WebServer", "Cron"),
 	)
 	return new(bootstrap.App)
 }

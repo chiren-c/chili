@@ -12,6 +12,8 @@ type ArticleService interface {
 	Save(ctx context.Context, art domain.ArticleAuthor) (int64, error)
 	GetById(ctx context.Context, id int64) (domain.ArticleAuthor, error)
 	Publish(ctx context.Context, art domain.ArticleAuthor) (int64, error)
+	TestJob(ctx context.Context) error
+	TestJobV2(ctx context.Context) error
 }
 
 type articleService struct {
@@ -37,6 +39,16 @@ func (a *articleService) GetById(ctx context.Context, id int64) (domain.ArticleA
 
 func (a *articleService) Publish(ctx context.Context, art domain.ArticleAuthor) (int64, error) {
 	return a.authorResp.Sync(ctx, art)
+}
+
+func (a *articleService) TestJob(ctx context.Context) error {
+	a.log.Info("test job article 111111111~~~~")
+	return nil
+}
+
+func (a *articleService) TestJobV2(ctx context.Context) error {
+	a.log.Info("test job article 2222222222~~~~")
+	return nil
 }
 
 func NewArticleService(log loggerx.Logger, authorResp repository.ArticleAuthorRepository) ArticleService {

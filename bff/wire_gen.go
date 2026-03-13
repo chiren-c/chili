@@ -46,8 +46,11 @@ func InitApp() *bootstrap.App {
 	articleService := service3.NewArticleService(logger, articleAuthorRepository)
 	articleHandler := article.NewArticleHandler(logger, articleService)
 	server := ioc.InitGinServer(userHandler, articleHandler, handler, logger, cmdable)
+	publishJob := ioc.InitPublishJob()
+	cron := ioc.InitJobs(logger, publishJob)
 	app := &bootstrap.App{
 		WebServer: server,
+		Cron:      cron,
 	}
 	return app
 }
